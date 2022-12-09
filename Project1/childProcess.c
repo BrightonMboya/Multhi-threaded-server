@@ -3,48 +3,52 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-int childProcess()
+int main(int argc, char *argv[])
 {
-    int i;
-    for (i = 0; i < 3; i++)
+    // Check if the number of processes in the chain was specified as a command-line argument
+    if (argc != 2)
     {
-        // now let's create the create the child pid
-        int child_pid;
+        printf("Usage: %s <num_processes>\n", argv[0]);
+        return 1;
+    }
 
-        // now check if the child_pid < o that means we got an error and we need to exit
-        if ((child_pid = fork()) < 0)
+    // Get the number of processes in the chain from the command-line argument
+    int num_processes = atoi(argv[1]);
+
+    // Create the chain of processes
+    for (int i = 0; i < num_processes; i++)
+    {
+        pid_t pid = fork();
+
+        // Check if the fork was successful
+        if (pid < 0)
         {
-            perror("fork");
-            exit(1);
+            // Fork failed
+            perror("Fork failed");
+            return 1;
         }
-        else if (child_pid > 0)
+        else if (pid == 0)
         {
-            printf("This is the process of a Parent, I forked child %d with a pid of %d \n", i, child_pid);
-            /* Now from here we continue the process until no child is left and we will wait for a while before exiting*/
+            // This is the child process
+            if (i == num_processes - 1)
+            {
+                // This is the last process in the chain, so print the message and exit
+                printf("Hello from process %d\n", getpid());
+
+                return 0;
+            }
+            else
+            {
+                // This is not the last process in the chain, so wait for the child process to finish
+                wait(NULL);
+            }
         }
         else
         {
-            // now here we get the child_pid by calling the getpid() system call
-            printf("Hello World, I am the %d child, I have a pid of %d \n", i, getpid());
-
-            // now here let's just sleep for 5 seconds
-            sleep(5);
+            // This is the parent process, so wait for the child process to finish
+            wait(NULL);
         }
-
-        // now this process that get here is  the parent as children are blocked from the exit block above
-        // printf("waiting for all children processes to be completed \n");
-
-        int child_exit_pid;
-        while ((child_exit_pid = wait(NULL)) >= 0)
-        {
-            // just wait until we have an error
-            printf("This is child with pid == %d and I am exiting \n", child_exit_pid);
-        }
-        printf("Parent has now exited!!");
     }
-}
 
-int main()
-{
-    childProcess();
+    return 0;
 }
