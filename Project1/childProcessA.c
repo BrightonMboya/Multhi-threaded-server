@@ -1,11 +1,19 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/wait.h>
 
-int main()
+int main(int argc, char *argv[])
 {
+    // Check if the number of processes in the chain was specified as a command-line argument
+    if (argc != 2)
+    {
+        printf("Usage: %s <num_processes>\n", argv[0]);
+        return 1;
+    }
+
     // Number of child processes to create
-    const int num_child_processes = 5;
+    int num_child_processes = atoi(argv[1]);
 
     // Create the child processes
     for (int i = 0; i < num_child_processes; i++)
